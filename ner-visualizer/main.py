@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 import spacy
 
@@ -14,7 +14,7 @@ app.add_middleware(
 )
 
 @app.post("/api/ner")
-async def extract_entities(text: str):
+async def extract_entities(text: str = Body(..., embed=True)):
     try:
         doc = nlp(text)
         entities = [
