@@ -6,6 +6,16 @@ export default function Home() {
   const [text, setText] = useState('');
   const [entities, setEntities] = useState([]);
 
+  const analyzeText = async () => {
+    const response = await fetch('http://localhost:8000/api/ner', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    const data = await response.json();
+    setEntities(data.entities);
+  };
+
   return (
     <div className="container">
       <h1>Named Entity Visualizer</h1>
@@ -15,7 +25,7 @@ export default function Home() {
         placeholder="Paste your text here..."
         rows="6"
       />
-      <button>Analyze</button>
+      <button onClick={analyzeText}>Analyze</button>
       
       <h2>Results:</h2>
       <div 
