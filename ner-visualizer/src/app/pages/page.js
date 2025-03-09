@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {CategoryScale} from 'chart.js';
-import Chart from 'chart.js/auto';   
+import Chart from 'chart.js/auto';
+import ForceGraph2D from 'react-force-graph-2d';   
 Chart.register(CategoryScale);
 
 const ENTITY_TYPES = [
@@ -30,6 +31,7 @@ const ENTITY_TYPES = [
 export default function Home() {
   const [text, setText] = useState('');
   const [entities, setEntities] = useState([]);
+  const [relations, setRelations] = useState([]);
 
   const analyzeText = async () => {
     const response = await fetch('http://localhost:8000/api/ner', {
@@ -38,7 +40,9 @@ export default function Home() {
       body: JSON.stringify({ text }), 
     });
     const data = await response.json();
+    console.log(data)
     setEntities(data.entities);
+    setRelations(data.relations);
   };
 
   const highlightEntities = () => {
@@ -81,12 +85,42 @@ export default function Home() {
     setText(data.text);
   };
 
+  const resetFile = () => {
+    const file = document.querySelector('input[type="file"]');
+    file.value = '';
+  }
+
   const entityCounts = entities?.reduce((acc, ent) => {
     acc[ent.label] = (acc[ent.label] || 0) + 1;
     return acc;
   }, {}) || {};
   const sortedLabels = Object.keys(entityCounts).sort((a, b) => entityCounts[b] - entityCounts[a]);
   const sortedCounts = sortedLabels.map(label => entityCounts[label]);
+
+  function Graph({ entities, relations }) {
+    const nodes = [...new Set(entities.map(ent => ent.text))]
+      .map(text => ({
+        id: text,
+        label: entities.find(e => e.text === text).label
+      }));
+
+    const links = relations.map(rel => ({
+      source: rel.source,
+      target: rel.target
+    }));
+
+    return (
+      <ForceGraph2D
+        graphData={{ nodes, links }}
+        nodeLabel="id"
+        nodeAutoColorBy="label"
+        linkDirectionalArrowLength={6}
+        linkDirectionalArrowRelPos={1}
+        width={800}
+        height={400}
+      />
+    );
+  }
 
 
   return (
@@ -100,6 +134,7 @@ export default function Home() {
       />
 
     <input className="button" type="file" onChange={handleFileUpload} />
+    <button onClick={resetFile}>X</button>
 
       {/* <button onClick={analyzeText}>Analyze</button> */}
       
@@ -132,7 +167,15 @@ export default function Home() {
             ENTITY_TYPES.find(e => e.label === label)?.color || '#ccc'
           )
         }]
-      }} /> 
+      }} />
+
+      {/* <ForceGraph2D
+        graphData={{
+          nodes: relations.map(rel => ({ id: rel.source })),
+          links: relations
+        }}
+      /> */}
+      <Graph entities={entities} relations={relations} />
 
     </div>
   );

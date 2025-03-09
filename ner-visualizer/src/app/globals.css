@@ -38,10 +38,20 @@ textarea {
 }
 
 button {
-  padding: 0.5rem 1rem;
-  background: #0011f2;
+  padding: 0.13rem 0.5rem;
+  background: gray;
   color: white;
   border: none;
+  cursor: pointer;
+}
+
+.button {
+  /* padding: 0.2rem 0.5rem; */
+  /* background: gray; */
+  border-width: 2px;
+  border-color: #171717;
+  color: black;
+  /* border: none; */
   cursor: pointer;
 }
 

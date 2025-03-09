@@ -22,7 +22,18 @@ async def extract_entities(text: str = Body(..., embed=True)):
             {"text": ent.text, "label": ent.label_, "start": ent.start_char, "end": ent.end_char}
             for ent in doc.ents
         ]
-        return {"entities": entities}
+        relations = []
+        for sent in doc.sents:
+            sent_ents = [ent for ent in sent.ents]
+            
+            for i in range(len(sent_ents)):
+                for j in range(i+1, len(sent_ents)):
+                    relations.append({
+                        "source": sent_ents[i].text,
+                        "target": sent_ents[j].text,
+                        "context": sent.text 
+                    })
+        return {"entities": entities, "relations": relations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
     
