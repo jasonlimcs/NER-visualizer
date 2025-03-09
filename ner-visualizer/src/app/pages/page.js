@@ -1,26 +1,30 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { Bar } from 'react-chartjs-2';
+import {CategoryScale} from 'chart.js';
+import Chart from 'chart.js/auto';   
+Chart.register(CategoryScale);
 
 const ENTITY_TYPES = [
-  { label: 'PERSON', description: 'People'},
-  { label: 'ORG', description: 'Organizations'},
-  { label: 'GPE', description: 'Countries/Cities'},
-  { label: 'DATE', description: 'Dates'},
-  { label: 'MONEY', description: 'Monetary Values'},
-  { label: 'EVENT', description: 'Event'},
-  { label: 'NORP', description: 'Nationalities or religious or political groups'},
-  { label: 'FAC', description: 'Buildings, airports, highways, bridges, etc.'},
-  { label: 'LOC', description: 'Locations'},
-  { label: 'PRODUCT', description: 'Products'},
-  { label: 'WORK_OF_ART', description: 'Titles of books, songs, etc.'},
-  { label: 'LAW', description: 'Law documents'},
-  { label: 'LANGUAGE', description: 'Languages'},
-  { label: 'TIME', description: 'Times'},
-  { label: 'PERCENT', description: 'Percentage'},
-  { label: 'QUANTITY', description: 'Measurements'},
-  { label: 'ORDINAL', description: 'Ordinal values'},
-  { label: 'CARDINAL', description: 'Cardinal values'},
+  { label: 'PERSON', description: 'People', color: '#ffcdd2'},
+  { label: 'ORG', description: 'Organizations', color: '#c8e6c9'},
+  { label: 'GPE', description: 'Countries/Cities', color: '#bbdefb'},
+  { label: 'DATE', description: 'Dates', color: '#e1bee7'},
+  { label: 'MONEY', description: 'Monetary Values', color: '#eb346b'},
+  { label: 'EVENT', description: 'Event', color: '#f2f246'},
+  { label: 'NORP', description: 'Nationalities or religious or political groups', color: '#f3a505'},
+  { label: 'FAC', description: 'Buildings, airports, highways, bridges, etc.', color: '#78858B'},
+  { label: 'LOC', description: 'Locations', color: '#2271B3'},
+  { label: 'PRODUCT', description: 'Products', color: '#F75E25'},
+  { label: 'WORK_OF_ART', description: 'Titles of books, songs, etc.', color: '#924E7D'},
+  { label: 'LAW', description: 'Law documents', color: '#A5A5A5'},
+  { label: 'LANGUAGE', description: 'Languages', color: '#6C7059'},
+  { label: 'TIME', description: 'Times', color: '#9B111E'},
+  { label: 'PERCENT', description: 'Percentage', color: '#E1CC4F'},
+  { label: 'QUANTITY', description: 'Measurements', color: '#8A6642'},
+  { label: 'ORDINAL', description: 'Ordinal values', color: '#BEBD7F'},
+  { label: 'CARDINAL', description: 'Cardinal values', color: '#015D52'},
 ];
 
 export default function Home() {
@@ -29,9 +33,9 @@ export default function Home() {
 
   const analyzeText = async () => {
     const response = await fetch('http://localhost:8000/api/ner', {
-      method: 'POST',
+      method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ text }), 
     });
     const data = await response.json();
     setEntities(data.entities);
@@ -77,6 +81,14 @@ export default function Home() {
     setText(data.text);
   };
 
+  const entityCounts = entities?.reduce((acc, ent) => {
+    acc[ent.label] = (acc[ent.label] || 0) + 1;
+    return acc;
+  }, {}) || {};
+  const sortedLabels = Object.keys(entityCounts).sort((a, b) => entityCounts[b] - entityCounts[a]);
+  const sortedCounts = sortedLabels.map(label => entityCounts[label]);
+
+
   return (
     <div className="container">
       <h1>Named Entity Visualizer</h1>
@@ -96,6 +108,7 @@ export default function Home() {
         className="highlighted-text"
         dangerouslySetInnerHTML={highlightEntities()} 
       />
+      <div></div>
 
       <div className="legend">
         <h3>Entity Legend:</h3>
@@ -110,7 +123,17 @@ export default function Home() {
         </div>
       </div>
 
-      
+      <Bar data={{
+        labels: sortedLabels,
+        datasets: [{
+          label: 'Entity Count',
+          data: sortedCounts,
+          backgroundColor: sortedLabels.map(label => 
+            ENTITY_TYPES.find(e => e.label === label)?.color || '#ccc'
+          )
+        }]
+      }} /> 
+
     </div>
   );
 }

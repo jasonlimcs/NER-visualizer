@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import spacy
 import fitz
 
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_md")
 
 app = FastAPI()
 

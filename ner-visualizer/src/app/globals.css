@@ -45,6 +45,22 @@ button {
   cursor: pointer;
 }
 
+.legend {
+  position: absolute;
+  right: 100px;
+  top: 100px;
+  width: 200px;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.legend-item {
+  margin-bottom: 10px;
+}
+
 .highlighted-text {
   margin-top: 1rem;
   padding: 1rem;
@@ -69,9 +85,10 @@ button {
 .entity.loc { background: #2271B3; }
 .entity.product { background: #F75E25; }
 .entity.work_of_art { background: #924E7D; }
-.entity.language { background: #6C7059; }
 .entity.law { background: #A5A5A5; }
+.entity.language { background: #6C7059; }
 .entity.time { background: #9B111E; }
+.entity.percent { background: #E1CC4F; }
 .entity.quantity { background: #8A6642; }
 .entity.ordinal { background: #BEBD7F; }
 .entity.cardinal { background: #015D52; }
