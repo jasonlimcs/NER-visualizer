@@ -63,3 +63,15 @@ button {
 .entity.gpe { background: #bbdefb; }
 .entity.date { background: #e1bee7; }
 .entity.money { background: #eb346b; }
+.entity.event { background: #f2f246; }
+.entity.norp { background: #f3a505; }
+.entity.fac { background: #78858B; }
+.entity.loc { background: #2271B3; }
+.entity.product { background: #F75E25; }
+.entity.work_of_art { background: #924E7D; }
+.entity.language { background: #6C7059; }
+.entity.law { background: #A5A5A5; }
+.entity.time { background: #9B111E; }
+.entity.quantity { background: #8A6642; }
+.entity.ordinal { background: #BEBD7F; }
+.entity.cardinal { background: #015D52; }

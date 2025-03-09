@@ -3,11 +3,24 @@
 import { useState } from 'react';
 
 const ENTITY_TYPES = [
-  { label: 'PERSON', description: 'People', color: '#ffcdd2' },
-  { label: 'ORG', description: 'Organizations', color: '#c8e6c9' },
-  { label: 'GPE', description: 'Countries/Cities', color: '#bbdefb' },
-  { label: 'DATE', description: 'Dates', color: '#e1bee7' },
-  { label: 'MONEY', description: 'Monetary Values', color: '#dcedc8' },
+  { label: 'PERSON', description: 'People'},
+  { label: 'ORG', description: 'Organizations'},
+  { label: 'GPE', description: 'Countries/Cities'},
+  { label: 'DATE', description: 'Dates'},
+  { label: 'MONEY', description: 'Monetary Values'},
+  { label: 'EVENT', description: 'Event'},
+  { label: 'NORP', description: 'Nationalities or religious or political groups'},
+  { label: 'FAC', description: 'Buildings, airports, highways, bridges, etc.'},
+  { label: 'LOC', description: 'Locations'},
+  { label: 'PRODUCT', description: 'Products'},
+  { label: 'WORK_OF_ART', description: 'Titles of books, songs, etc.'},
+  { label: 'LAW', description: 'Law documents'},
+  { label: 'LANGUAGE', description: 'Languages'},
+  { label: 'TIME', description: 'Times'},
+  { label: 'PERCENT', description: 'Percentage'},
+  { label: 'QUANTITY', description: 'Measurements'},
+  { label: 'ORDINAL', description: 'Ordinal values'},
+  { label: 'CARDINAL', description: 'Cardinal values'},
 ];
 
 export default function Home() {
@@ -35,7 +48,7 @@ export default function Home() {
       const entityText = highlightedText.slice(start, end);
       highlightedText = 
         highlightedText.slice(0, start) +
-        `<span class="entity ${label.toLowerCase()}" title="${label}">${entityText}</span>` +
+        `<span class="entity ${label.toLowerCase()}" title="${label}">${entityText} <strong>${label}</strong></span>` +
         highlightedText.slice(end);
     });
     return { __html: highlightedText };
