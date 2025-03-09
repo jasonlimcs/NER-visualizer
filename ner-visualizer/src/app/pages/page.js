@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const ENTITY_TYPES = [
   { label: 'PERSON', description: 'People'},
@@ -54,6 +54,15 @@ export default function Home() {
     return { __html: highlightedText };
   };
 
+  // Debounce text input
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      analyzeText();
+    }, 1000);
+
+    return () => clearTimeout(delayDebounce);
+  }, [text]);
+
   return (
     <div className="container">
       <h1>Named Entity Visualizer</h1>
@@ -63,7 +72,7 @@ export default function Home() {
         placeholder="Paste your text here..."
         rows="6"
       />
-      <button onClick={analyzeText}>Analyze</button>
+      {/* <button onClick={analyzeText}>Analyze</button> */}
       
       <h2>Results:</h2>
       <div 
