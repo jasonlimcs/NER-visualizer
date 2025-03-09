@@ -63,6 +63,20 @@ export default function Home() {
     return () => clearTimeout(delayDebounce);
   }, [text]);
 
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('http://localhost:8000/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+    setText(data.text);
+  };
+
   return (
     <div className="container">
       <h1>Named Entity Visualizer</h1>
@@ -72,6 +86,9 @@ export default function Home() {
         placeholder="Paste your text here..."
         rows="6"
       />
+
+    <input className="button" type="file" onChange={handleFileUpload} />
+
       {/* <button onClick={analyzeText}>Analyze</button> */}
       
       <h2>Results:</h2>
