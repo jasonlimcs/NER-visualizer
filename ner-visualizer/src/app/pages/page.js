@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {CategoryScale} from 'chart.js';
 import Chart from 'chart.js/auto';
-import ForceGraph2D from 'react-force-graph-2d';   
+import ForceGraph3D from 'react-force-graph-3d';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer';
 Chart.register(CategoryScale);
 
 const ENTITY_TYPES = [
@@ -32,6 +35,7 @@ export default function Home() {
   const [text, setText] = useState('');
   const [entities, setEntities] = useState([]);
   const [relations, setRelations] = useState([]);
+  const [selectedRelationTypes, setSelectedRelationTypes] = useState([]);
 
   const analyzeText = async () => {
     const response = await fetch('http://localhost:8000/api/ner', {
@@ -49,7 +53,6 @@ export default function Home() {
     if (!text || !entities?.length) return { __html: text };
 
     let highlightedText = text;
-    // Sort entities by start index in reverse to avoid overlapping issues
     const sortedEntities = [...entities].sort((a, b) => b.start - a.start);
     sortedEntities.forEach((ent) => {
       const { start, end, label } = ent;
@@ -88,6 +91,7 @@ export default function Home() {
   const resetFile = () => {
     const file = document.querySelector('input[type="file"]');
     file.value = '';
+    setText('');
   }
 
   const entityCounts = entities?.reduce((acc, ent) => {
@@ -97,27 +101,73 @@ export default function Home() {
   const sortedLabels = Object.keys(entityCounts).sort((a, b) => entityCounts[b] - entityCounts[a]);
   const sortedCounts = sortedLabels.map(label => entityCounts[label]);
 
-  function Graph({ entities, relations }) {
+  // Get unique relation types from the current relations
+  const relationTypes = [...new Set(relations.map(rel => rel.type))].sort();
+
+  function Graph({ entities, relations, selectedTypes }) {
     const nodes = [...new Set(entities.map(ent => ent.text))]
       .map(text => ({
         id: text,
-        label: entities.find(e => e.text === text).label
+        label: entities.find(e => e.text === text).label,
+        val: 1,
+        color: ENTITY_TYPES.find(e => e.label === entities.find(ent => ent.text === text).label)?.color || '#ccc'
       }));
 
-    const links = relations.map(rel => ({
-      source: rel.source,
-      target: rel.target
-    }));
+    // Filter relations based on selected types
+    const filteredLinks = relations
+      .filter(rel => selectedTypes.length === 0 || selectedTypes.includes(rel.type))
+      .map(rel => ({
+        source: rel.source,
+        target: rel.target,
+        type: rel.type,
+        confidence: rel.confidence,
+        context: rel.context,
+        width: rel.confidence * 2,
+        color: `hsl(${rel.confidence * 120}, 70%, 50%)`
+      }));
 
     return (
-      <ForceGraph2D
-        graphData={{ nodes, links }}
+      <ForceGraph3D
+        graphData={{ nodes, links: filteredLinks }}
         nodeLabel="id"
         nodeAutoColorBy="label"
         linkDirectionalArrowLength={6}
         linkDirectionalArrowRelPos={1}
+        linkWidth={link => link.confidence * 2}
+        linkColor={link => link.color}
+        linkLabel={link => `${link.type} (${(link.confidence * 100).toFixed(0)}% confidence)`}
+        linkTooltip={link => `
+          <div style="padding: 8px;">
+            <strong>${link.source} -> ${link.target}</strong><br/>
+            Type: ${link.type}<br/>
+            Confidence: ${(link.confidence * 100).toFixed(0)}%<br/>
+            Context: "${link.context}"
+          </div>
+        `}
         width={800}
         height={400}
+        backgroundColor="#ffffff"
+        nodeRelSize={6}
+        linkOpacity={0.6}
+        linkResolution={1}
+        enableNodeDrag={true}
+        enableNavigationControls={true}
+        enablePointerInteraction={true}
+        onEngineStop={() => {
+          const camera = document.querySelector('canvas').__threeObj.camera;
+          camera.position.set(400, 400, 400);
+          camera.lookAt(0, 0, 0);
+        }}
+        extraRenderers={[
+          new EffectComposer(
+            new RenderPass(),
+            new UnrealBloomPass({
+              threshold: 0.5,
+              strength: 0.5,
+              radius: 0.4
+            })
+          )
+        ]}
       />
     );
   }
@@ -158,6 +208,8 @@ export default function Home() {
         </div>
       </div>
 
+      
+
       <Bar data={{
         labels: sortedLabels,
         datasets: [{
@@ -169,13 +221,37 @@ export default function Home() {
         }]
       }} />
 
-      {/* <ForceGraph2D
-        graphData={{
-          nodes: relations.map(rel => ({ id: rel.source })),
-          links: relations
-        }}
-      /> */}
-      <Graph entities={entities} relations={relations} />
+<div className="relation-filters">
+        <h3>Filter Relationships:</h3>
+        <div className="filter-options">
+          <label>
+            <input
+              type="checkbox"
+              checked={selectedRelationTypes.length === 0}
+              onChange={() => setSelectedRelationTypes([])}
+            />
+            Show All
+          </label>
+          {relationTypes.map(type => (
+            <label key={type}>
+              <input
+                type="checkbox"
+                checked={selectedRelationTypes.includes(type)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedRelationTypes([...selectedRelationTypes, type]);
+                  } else {
+                    setSelectedRelationTypes(selectedRelationTypes.filter(t => t !== type));
+                  }
+                }}
+              />
+              {type}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <Graph entities={entities} relations={relations} selectedTypes={selectedRelationTypes} />
 
     </div>
   );

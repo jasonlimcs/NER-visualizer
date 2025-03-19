@@ -14,6 +14,62 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def extract_relation_type(doc, ent1, ent2):
+    # Find the shortest path between the two entities
+    path = []
+    current = ent1.root
+    while current != ent2.root:
+        path.append(current.dep_)
+        current = current.head
+        if current == current.head:  # Reached root
+            break
+    
+    # Map dependency patterns to relationship types
+    relation_patterns = {
+        'nsubj': 'subject of',
+        'dobj': 'object of',
+        'pobj': 'object of preposition',
+        'compound': 'part of',
+        'poss': 'possesses',
+        'attr': 'is',
+        'prep': 'located in',
+        'agent': 'agent of',
+        'pcomp': 'complement of',
+        'acomp': 'attribute of',
+        'dative': 'recipient of',
+        'appos': 'same as',
+        'relcl': 'related to',
+        'det': 'determiner of',
+        'amod': 'modifies',
+        'advmod': 'modifies',
+        'neg': 'negation of',
+        'aux': 'auxiliary of',
+        'mark': 'marker of',
+        'case': 'case of',
+        'cc': 'coordinated with',
+        'conj': 'conjoined with',
+        'expl': 'expletive of',
+        'intj': 'interjection',
+        'meta': 'meta information',
+        'nummod': 'number modifier of',
+        'oprd': 'object predicate of',
+        'parataxis': 'paratactic relation with',
+        'punct': 'punctuation',
+        'quantmod': 'quantifier modifier of',
+        'xcomp': 'clausal complement of'
+    }
+    
+    # Determine relationship type based on path
+    if not path:
+        return "related to"
+    
+    # Look for specific patterns in the path
+    for dep in path:
+        if dep in relation_patterns:
+            return relation_patterns[dep]
+    
+    return "related to"
+
 @app.post("/api/ner")
 async def extract_entities(text: str = Body(..., embed=True)):
     try:
@@ -23,20 +79,31 @@ async def extract_entities(text: str = Body(..., embed=True)):
             for ent in doc.ents
         ]
         relations = []
+        
         for sent in doc.sents:
             sent_ents = [ent for ent in sent.ents]
             
             for i in range(len(sent_ents)):
                 for j in range(i+1, len(sent_ents)):
+                    # Extract relationship type
+                    relation_type = extract_relation_type(doc, sent_ents[i], sent_ents[j])
+                    
+                    # Calculate a simple confidence score based on sentence length and entity distance
+                    sent_length = len(sent.text.split())
+                    ent_distance = abs(i - j)
+                    confidence = max(0.1, 1.0 - (ent_distance / sent_length))
+                    
                     relations.append({
                         "source": sent_ents[i].text,
                         "target": sent_ents[j].text,
-                        "context": sent.text 
+                        "type": relation_type,
+                        "confidence": round(confidence, 2),
+                        "context": sent.text
                     })
+        
         return {"entities": entities, "relations": relations}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
-    
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):

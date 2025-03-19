@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "react-chartjs-2": "^5.3.0"
+    "react-chartjs-2": "^5.3.0",
+    "react-force-graph-3d": "^1.26.0",
+    "three": "^0.174.0"
   }
 }
